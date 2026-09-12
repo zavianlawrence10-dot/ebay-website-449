@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resale — Apple product pricing</title>
+<style>
+  :root{
+    --bg:#F5F4F2;
+    --card:#FFFFFF;
+    --ink:#1D1D1F;
+    --ink-soft:#6E6E73;
+    --ink-faint:#9A9A9E;
+    --line:#E3E2DE;
+    --accent:#0071E3;
+    --accent-soft:#EAF2FD;
+    --low:#B0532E;
+    --mid:#8A6D1E;
+    --high:#3B7A4E;
+    --radius:14px;
+    --ink-on-dark:#F5F4F2;
+    --spark:#F2C879;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:0 1.5rem 4rem;
+  }
+  .hero{
+    background:var(--ink);
+    color:var(--ink-on-dark);
+    margin:0 calc(-1 * 1.5rem) 1.75rem;
+    padding:2.75rem 1.5rem 2rem;
+    border-radius:0 0 22px 22px;
+  }
+  @media (min-width:672px){
+    .hero{
+      margin-left:calc(-1.5rem);
+      margin-right:calc(-1.5rem);
+    }
+  }
+  .kicker{
+    font-size:13px;
+    color:#A9A9AD;
+    margin:0 0 8px;
+    letter-spacing:0.01em;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .kicker .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--spark);
+    display:inline-block;
+  }
+  h1{
+    font-size:27px;
+    font-weight:600;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+    color:#fff;
+  }
+  .sub{
+    font-size:14.5px;
+    color:#B8B8BC;
+    margin:0;
+    max-width:44ch;
+  }
+
+  .tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    background:#EAE9E5;
+    padding:4px;
+    border-radius:12px;
+    margin-bottom:1.5rem;
+    position:relative;
+    z-index:1;
+  }
+  .tab{
+    flex:1 1 calc(50% - 3px);
+    min-width:0;
+    border:none;
+    background:transparent;
+    padding:10px 8px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    border-radius:9px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:background .15s ease, color .15s ease;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  @media (min-width:480px){
+    .tab{flex:1 1 0;}
+  }
+  .tab.active{
+    background:var(--card);
+    color:var(--ink);
+    box-shadow:0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1.25rem;
+    margin-bottom:1rem;
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input[type=text], input[type=number], select{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#FBFBFA;
+    color:var(--ink);
+    outline:none;
+  }
+  input:focus, select:focus{
+    border-color:var(--accent);
+    background:#fff;
+  }
+  .row2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .field{margin-bottom:14px;}
+
+  button.primary{
+    width:100%;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:500;
+    padding:13px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  button.primary:active{opacity:0.85;}
+  button.primary:disabled{background:var(--ink-faint);cursor:default;}
+
+  .hint{
+    font-size:12.5px;
+    color:var(--ink-faint);
+    margin-top:6px;
+  }
+  .error{
+    font-size:13px;
+    color:#B3261E;
+    margin-top:6px;
+    display:none;
+  }
+
+  .results{margin-top:1.5rem;}
+  .results-title{
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+
+  .range-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:1rem;
+  }
+  .range-box{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .range-box .lbl{
+    font-size:11.5px;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:4px;
+  }
+  .range-box.low .lbl{color:var(--low);}
+  .range-box.mid .lbl{color:var(--mid);}
+  .range-box.high .lbl{color:var(--high);}
+  .range-box .val{
+    font-size:19px;
+    font-weight:600;
+  }
+
+  .listing{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .listing:last-child{border-bottom:none;}
+  .listing .name{color:var(--ink);}
+  .listing .cond{color:var(--ink-faint);font-size:12.5px;display:block;margin-top:1px;}
+  .listing .price{font-weight:600;white-space:nowrap;margin-left:12px;}
+
+  .platform-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+    gap:12px;
+  }
+  .platform-card:last-child{border-bottom:none;}
+  .platform-name{
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 3px;
+  }
+  .platform-note{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0;
+    max-width:34ch;
+  }
+  .platform-price{
+    text-align:right;
+    white-space:nowrap;
+  }
+  .platform-price .amt{
+    font-size:17px;
+    font-weight:600;
+  }
+  .speed-pill{
+    display:inline-block;
+    font-size:11px;
+    font-weight:500;
+    padding:2px 8px;
+    border-radius:20px;
+    margin-top:4px;
+  }
+  .speed-fast{background:#E7F4EA;color:var(--high);}
+  .speed-med{background:#FBF3DE;color:var(--mid);}
+  .speed-slow{background:#FBEAE5;color:var(--low);}
+
+  .api-note{
+    background:var(--accent-soft);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    color:#1a4a7a;
+    margin-bottom:1rem;
+    line-height:1.45;
+  }
+
+  .rp-list{margin-top:1.25rem;}
+  .rp-item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .rp-item .rp-name{font-size:14.5px;font-weight:500;}
+  .rp-item .rp-cond{font-size:12px;color:var(--ink-faint);margin-top:2px;}
+  .rp-item .rp-price{font-size:16px;font-weight:600;white-space:nowrap;}
+
+  .empty{
+    text-align:center;
+    padding:2rem 1rem;
+    color:var(--ink-faint);
+    font-size:14px;
+  }
+
+  footer{
+    margin-top:2.5rem;
+    padding-top:1.25rem;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--ink-faint);
+    text-align:center;
+  }
+
+  .spotlight{
+    background:var(--ink);
+    border-radius:18px;
+    padding:1.5rem;
+    color:var(--ink-on-dark);
+    position:relative;
+    overflow:hidden;
+    margin-bottom:1rem;
+  }
+  .spotlight-eyebrow{
+    font-size:12.5px;
+    color:var(--spark);
+    font-weight:500;
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .spotlight-name{
+    font-size:24px;
+    font-weight:600;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .spotlight-reason{
+    font-size:14px;
+    color:#C6C6CA;
+    margin:0 0 1.1rem;
+    max-width:42ch;
+  }
+  .spotlight-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:1.1rem;
+  }
+  .spotlight-stat{
+    background:rgba(255,255,255,0.07);
+    border-radius:10px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .spotlight-stat .l{
+    font-size:11px;
+    color:#9E9EA3;
+    margin-bottom:3px;
+  }
+  .spotlight-stat .v{
+    font-size:16px;
+    font-weight:600;
+  }
+  .spotlight-margin{
+    font-size:13.5px;
+    color:var(--ink-on-dark);
+    background:rgba(242,200,121,0.16);
+    border:1px solid rgba(242,200,121,0.3);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:1rem;
+  }
+  .spotlight-margin b{color:var(--spark);}
+  .spotlight-btn{
+    width:100%;
+    background:#fff;
+    color:var(--ink);
+    border:none;
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:500;
+    padding:12px 16px;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .spotlight-btn:active{opacity:0.85;}
+
+  .why-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .why-list li{
+    display:flex;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .why-list li:last-child{border-bottom:none;}
+  .why-list .num{
+    flex-shrink:0;
+    width:20px;height:20px;
+    border-radius:50%;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:11px;
+    font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .method-note{
+    font-size:12px;
+    color:var(--ink-faint);
+    line-height:1.5;
+    margin-top:1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap" style="padding:0;">
+    <p class="kicker"><span class="dot"></span>Resale toolkit</p>
+    <h1>Apple product pricing</h1>
+    <p class="sub">Check current prices, work out what to list at, and see which platform suits the sale.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" data-panel="pick">This week</button>
+    <button class="tab" data-panel="search">Search</button>
+    <button class="tab" data-panel="range">By price</button>
+    <button class="tab" data-panel="advisor">Sell advisor</button>
+  </div>
+
+  <div class="api-note" id="apiNote">
+    This runs against live eBay listings when the backend server is running with your API keys added — otherwise it automatically falls back to sample data so the tool still works. Product catalog last checked against Apple's lineup on <span id="catalogDate"></span> — new releases after that date won't appear in the sample data or weekly pick until it's updated again.
+  </div>
+
+  <div class="panel active" id="panel-pick">
+    <div id="spotlightWrap"></div>
+  </div>
+
+  <div class="panel" id="panel-search">
+    <div class="card">
+      <div class="field">
+        <label for="searchInput">Apple product</label>
+        <input type="text" id="searchInput" placeholder="e.g. iPhone 12, AirPods Pro, MacBook Air M1">
+      </div>
+      <div class="field">
+        <label for="conditionSelect">Condition</label>
+        <select id="conditionSelect">
+          <option value="any">Any condition</option>
+          <option value="new">New / sealed</option>
+          <option value="used-good">Used — good</option>
+          <option value="used-fair">Used — fair / faulty</option>
+        </select>
+      </div>
+      <button class="primary" id="searchBtn">Search eBay</button>
+      <p class="error" id="searchError">Type a product name first.</p>
+    </div>
+
+    <div class="results" id="searchResults"></div>
+  </div>
+
+  <div class="panel" id="panel-range">
+    <div class="card">
+      <div class="field">
+        <label for="productRangeInput">Apple product (optional)</label>
+        <input type="text" id="productRangeInput" placeholder="e.g. iPad, or leave blank for all Apple products">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="minPrice">Min price (£)</label>
+          <input type="number" id="minPrice" placeholder="200" min="0">
+        </div>
+        <div class="field">
+          <label for="maxPrice">Max price (£)</label>
+          <input type="number" id="maxPrice" placeholder="300" min="0">
+        </div>
+      </div>
+      <button class="primary" id="rangeBtn">Find products in range</button>
+      <p class="error" id="rangeError">Enter a valid min and max price.</p>
+    </div>
+
+    <div class="results" id="rangeResults"></div>
+  </div>
+
+  <div class="panel" id="panel-advisor">
+    <div class="card">
+      <div class="field">
+        <label for="advisorInput">What are you selling?</label>
+        <input type="text" id="advisorInput" placeholder="e.g. iPhone 13, AirPods Pro, iPad Air">
+      </div>
+      <div class="field">
+        <label for="advisorCondition">Condition</label>
+        <select id="advisorCondition">
+          <option value="any">Not sure / average</option>
+          <option value="new">New / sealed</option>
+          <option value="used-good">Used — good</option>
+          <option value="used-fair">Used — fair / faulty</option>
+        </select>
+      </div>
+      <button class="primary" id="advisorBtn">Get recommendation</button>
+      <p class="error" id="advisorError">Type a product name first.</p>
+    </div>
+
+    <div class="results" id="advisorResults"></div>
+  </div>
+
+  <footer>Sample data shown until an eBay API key is connected. Prices are indicative, not guaranteed sale prices.</footer>
+</div>
+
+<script>
+const CONDITION_MULTIPLIER = { any: 1, new: 1.28, "used-good": 1, "used-fair": 0.74 };
+
+const CATALOG = [
+  { name: "iPhone SE (2022)", base: 150 },
+  { name: "iPhone 11", base: 135 },
+  { name: "iPhone 12", base: 195 },
+  { name: "iPhone 12 Pro", base: 255 },
+  { name: "iPhone 13", base: 275 },
+  { name: "iPhone 13 Pro", base: 350 },
+  { name: "iPhone 14", base: 340 },
+  { name: "iPhone 14 Pro", base: 430 },
+  { name: "iPhone 15", base: 440 },
+  { name: "iPhone 15 Pro", base: 560 },
+  { name: "iPhone 16", base: 560 },
+  { name: "iPhone 16 Pro", base: 700 },
+  { name: "iPhone 16e", base: 420 },
+  { name: "iPhone 17", base: 720 },
+  { name: "iPhone Air", base: 780 },
+  { name: "iPhone 17 Pro", base: 890 },
+  { name: "iPhone 17 Pro Max", base: 980 },
+  { name: "AirPods (2nd gen)", base: 45 },
+  { name: "AirPods (3rd gen)", base: 90 },
+  { name: "AirPods Pro (2nd gen)", base: 155 },
+  { name: "AirPods 4", base: 110 },
+  { name: "AirPods Max", base: 340 },
+  { name: "Apple Watch SE", base: 140 },
+  { name: "Apple Watch Series 9", base: 240 },
+  { name: "Apple Watch Series 10", base: 320 },
+  { name: "Apple Watch Ultra 2", base: 550 },
+  { name: "iPad (A16)", base: 280 },
+  { name: "iPad Mini (A17 Pro)", base: 380 },
+  { name: "iPad Air (M4)", base: 480 },
+  { name: "iPad Pro 11-inch (M5)", base: 800 },
+  { name: "iPad Pro 13-inch (M5)", base: 1050 },
+  { name: "MacBook Air M2", base: 620 },
+  { name: "MacBook Air M3", base: 780 },
+  { name: "MacBook Air M4", base: 900 },
+  { name: "MacBook Pro 14-inch M3", base: 1150 },
+  { name: "MacBook Pro 14-inch M4", base: 1400 },
+  { name: "Mac Mini M2", base: 380 },
+  { name: "Mac Mini M4", base: 480 },
+  { name: "Apple Pencil Pro", base: 85 },
+  { name: "Magic Keyboard", base: 45 }
+];
+const CATALOG_LAST_CHECKED = "2026-09-11";
+
+function seededRandom(seed){
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function hashStr(s){
+  let h = 0;
+  for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+  return h;
+}
+
+function findClosestProduct(query){
+  const q = query.toLowerCase().trim();
+  let best = null, bestScore = -1;
+  CATALOG.forEach(item=>{
+    const n = item.name.toLowerCase();
+    let score = 0;
+    if(n === q) score = 100;
+    else if(n.includes(q) || q.includes(n)) score = 50;
+    else{
+      const qWords = q.split(/\s+/);
+      qWords.forEach(w=>{ if(w.length>1 && n.includes(w)) score += 8; });
+    }
+    if(score > bestScore){ bestScore = score; best = item; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+function generateListings(product, condition){
+  const seed = hashStr(product.name + condition);
+  const condMult = CONDITION_MULTIPLIER[condition];
+  const listings = [];
+  const conditions = condition === "any"
+    ? ["New / sealed","Used — good","Used — good","Used — fair"]
+    : condition === "new" ? ["New / sealed"]
+    : condition === "used-good" ? ["Used — good"]
+    : ["Used — fair"];
+
+  for(let i=0;i<7;i++){
+    const r = seededRandom(seed + i*13.7);
+    const spread = 0.62 + r*0.75;
+    const cond = conditions[i % conditions.length];
+    const cMult = condition === "any" ? CONDITION_MULTIPLIER[
+      cond === "New / sealed" ? "new" : cond === "Used — good" ? "used-good" : "used-fair"
+    ] : condMult;
+    const price = Math.round(product.base * spread * cMult);
+    listings.push({ price, condition: cond });
+  }
+  listings.sort((a,b)=>a.price-b.price);
+  return listings;
+}
+
+function platformAdjust(ebayPrice){
+  return {
+    ebay: Math.round(ebayPrice),
+    facebook: Math.round(ebayPrice * 0.90),
+    vinted: Math.round(ebayPrice * 0.85)
+  };
+}
+
+function speedFor(basePrice, platform){
+  if(platform === "facebook") return basePrice < 150 ? "fast" : "med";
+  if(platform === "vinted") return basePrice < 100 ? "fast" : "med";
+  if(platform === "ebay") return basePrice > 300 ? "fast" : "med";
+  return "med";
+}
+const speedLabel = { fast:"Sells fast", med:"Moderate speed", slow:"Slower to sell" };
+const speedClass = { fast:"speed-fast", med:"speed-med", slow:"speed-slow" };
+
+const PLATFORM_FEES = {
+  ebay: { rate: 0.129, fixed: 0.30, label: "eBay", note: "Final value fee plus payment processing." },
+  facebook: { rate: 0, fixed: 0, label: "Facebook Marketplace", note: "No fees on local cash or bank transfer sales." },
+  vinted: { rate: 0, fixed: 0, label: "Vinted", note: "Seller pays no fee — buyer covers the buyer protection fee instead." }
+};
+
+const SPEED_DAYS = {
+  ebay:     { fast:"2–4 days", med:"5–9 days", slow:"10–16 days" },
+  facebook: { fast:"1–3 days", med:"3–7 days", slow:"8–14 days" },
+  vinted:   { fast:"2–5 days", med:"6–11 days", slow:"12–20 days" }
+};
+
+function buildAdvisorRow(platformKey, sellPrice, basePriceForSpeed){
+  const fee = PLATFORM_FEES[platformKey];
+  const feeAmount = Math.round((sellPrice * fee.rate + fee.fixed) * 100) / 100;
+  const profit = Math.round((sellPrice - feeAmount) * 100) / 100;
+  const speed = speedFor(basePriceForSpeed, platformKey);
+  const days = SPEED_DAYS[platformKey][speed];
+  return { key: platformKey, label: fee.label, sellPrice, feeAmount, profit, speed, days, note: fee.note };
+}
+
+function renderAdvisor(product, condition){
+  const listings = generateListings(product, condition);
+  const mid = Math.round(listings.reduce((a,l)=>a+l.price,0)/listings.length);
+  const plat = platformAdjust(mid);
+
+  const rows = [
+    buildAdvisorRow("ebay", plat.ebay, mid),
+    buildAdvisorRow("facebook", plat.facebook, mid),
+    buildAdvisorRow("vinted", plat.vinted, mid)
+  ];
+
+  const bestProfit = rows.reduce((a,b)=> b.profit > a.profit ? b : a);
+  const speedRank = { fast:0, med:1, slow:2 };
+  const bestSpeed = rows.reduce((a,b)=> speedRank[b.speed] < speedRank[a.speed] ? b : a);
+
+  const resultsEl = document.getElementById("advisorResults");
+  resultsEl.innerHTML = `
+    <p class="results-title">${product.name} — where to sell it</p>
+    <div class="card" style="margin-bottom:1rem;">
+      <p style="font-size:13.5px;color:var(--ink-soft);margin:0;">
+        Best profit: <b style="color:var(--ink);">${bestProfit.label}</b> ·
+        Fastest sale: <b style="color:var(--ink);">${bestSpeed.label}</b>
+      </p>
+    </div>
+    <div class="card">
+      ${rows.map(r=>`
+        <div class="platform-card">
+          <div>
+            <p class="platform-name">${r.label}${r.key===bestProfit.key ? ' <span style="font-size:11px;font-weight:500;color:var(--high);">Best profit</span>' : ''}${r.key===bestSpeed.key && r.key!==bestProfit.key ? ' <span style="font-size:11px;font-weight:500;color:var(--accent);">Fastest</span>' : ''}</p>
+            <p class="platform-note">${r.note} Fee: £${r.feeAmount.toFixed(2)}. Estimated time to sell: ${r.days}.</p>
+            <span class="speed-pill ${speedClass[r.speed]}">${speedLabel[r.speed]}</span>
+          </div>
+          <div class="platform-price">
+            <div class="amt">£${r.sellPrice}</div>
+            <div style="font-size:12px;color:var(--high);margin-top:2px;">£${r.profit.toFixed(2)} profit</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <p class="method-note">Profit is sell price minus that platform's typical fee, using sample pricing data. Time to sell is a general estimate based on price point and platform behaviour, not a guarantee.</p>
+  `;
+}
+
+const REASONS = {
+  "iPhone 11": ["Cheapest iPhone still widely usable day-to-day", "Huge used supply keeps buying prices low", "Reliable seller for first-time smartphone buyers"],
+  "iPhone 12": ["Wide supply makes it easy to source below market rate", "Popular first upgrade point for budget buyers", "Faster turnaround on Facebook for local pickup"],
+  "iPhone 13": ["Still current enough for buyers, old enough to be cheap to source", "Battery/screen faults are easy, low-cost fixes", "Consistent demand across all three platforms"],
+  "iPhone 14": ["Recent enough to attract buyers avoiding the newest price tag", "Still under manufacturer software support for years to come", "Healthy margin band between used-fair and used-good condition"],
+  "iPhone 15": ["Only just superseded, so buyers see it as a discount flagship", "Wide resale market as 16 and 17 owners trade in", "Good margin before it becomes an older-generation phone"],
+  "iPhone 16e": ["Recent budget model with strong demand from new buyers", "Apple Intelligence support keeps it relevant for longer", "Cheaper to source than the full-price 16 line"],
+  "AirPods Pro (2nd gen)": ["High demand, low shipping cost and risk", "Easy to verify working condition before buying", "Strong resale margin relative to purchase price"],
+  "AirPods (2nd gen)": ["Extremely common, so sourcing cheap stock is easy", "Low price point moves fast on Vinted especially", "Minimal risk item — little can go wrong condition-wise"],
+  "AirPods 4": ["Newest entry-level AirPods, strong gift-season demand", "Wide price gap versus Pro model attracts budget buyers", "Easy to test and describe accurately when listing"],
+  "AirPods Max": ["High resale value per unit versus size and shipping cost", "Fewer sellers list them, less competition to price against", "Strong margin even after Vinted or eBay fees"],
+  "Apple Watch SE": ["Entry price point keeps buyer pool wide", "Straps and bands add easy upsell margin", "Good sell-through on Vinted for younger buyers"],
+  "Apple Watch Series 9": ["Mid-tier price with broad buyer appeal", "Common enough to source but not oversaturated", "Decent flip margin against SE stock"],
+  "iPad (A16)": ["Reliable seller for students and casual users", "Low competition compared to iPhones in this range", "Current entry-level model, holds value well"],
+  "iPad Mini (A17 Pro)": ["Portability keeps demand steady across the year", "Fewer used units on the market than full-size iPads", "Good margin between fair and good condition listings"],
+  "iPad Air (M4)": ["Current mid-range model buyers actively compare against", "Good resale spread to work with across conditions", "Strong demand from buyers avoiding Pro pricing"],
+  "MacBook Air M2": ["Still capable enough for most buyers' needs", "Bigger margin per sale than smaller accessories", "eBay buyers pay a premium for tested, working units"],
+  "Mac Mini M2": ["Compact and cheap to ship, lowering seller risk", "Popular budget entry into the Mac ecosystem", "Less price competition than laptop listings"]
+};
+
+function getWeekSeed(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(),0,1);
+  const week = Math.ceil((((now - start) / 86400000) + start.getDay()+1)/7);
+  return now.getFullYear()*100 + week;
+}
+
+function pickIndexForWeek(seed, poolLength){
+  const a = 2654435761;
+  const shuffled = ((seed * a) >>> 0) % poolLength;
+  return shuffled;
+}
+
+function renderSpotlight(){
+  const pickable = Object.keys(REASONS);
+  const seed = getWeekSeed();
+  const idx = pickIndexForWeek(seed, pickable.length);
+  const prevIdx = pickIndexForWeek(seed - 1, pickable.length);
+  const name = pickable[idx];
+  const isRepeat = idx === prevIdx;
+  const product = CATALOG.find(p=>p.name===name);
+  const listings = generateListings(product, "any");
+  const low = listings[0].price;
+  const high = listings[listings.length-1].price;
+  const mid = Math.round(listings.reduce((a,l)=>a+l.price,0)/listings.length);
+  const targetBuy = Math.round(low * 1.03);
+  const margin = mid - targetBuy;
+  const marginPct = Math.round((margin/targetBuy)*100);
+  const reasons = REASONS[name];
+
+  document.getElementById("spotlightWrap").innerHTML = `
+    <div class="spotlight">
+      <p class="spotlight-eyebrow">This week's pick to resell</p>
+      <p class="spotlight-name">${name}${isRepeat ? ' <span style="font-size:14px;font-weight:500;color:var(--spark);">x2</span>' : ''}</p>
+      <p class="spotlight-reason">Good balance of demand, sourcing cost and how quickly it tends to move right now.</p>
+      <div class="spotlight-stats">
+        <div class="spotlight-stat"><div class="l">Buy under</div><div class="v">£${targetBuy}</div></div>
+        <div class="spotlight-stat"><div class="l">Typical resell</div><div class="v">£${mid}</div></div>
+        <div class="spotlight-stat"><div class="l">Range</div><div class="v">£${low}–${high}</div></div>
+      </div>
+      <div class="spotlight-margin">Buying at around <b>£${targetBuy}</b> and reselling near <b>£${mid}</b> gives roughly <b>£${margin} (${marginPct}%)</b> margin before fees.</div>
+      <button class="spotlight-btn" id="spotlightSearchBtn">Search this on eBay</button>
+    </div>
+    <div class="card">
+      <p class="results-title">Why this one</p>
+      <ul class="why-list">
+        ${reasons.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r}</span></li>`).join("")}
+      </ul>
+    </div>
+    <p class="method-note">eBay doesn't publish a public "top sold" feed, so this pick is based on typical demand, sourcing margin and how fast each product tends to sell — not scraped sales data. Changes every Sunday at midnight, based on your device's local time. "x2" means the same product carried over from last week.</p>
+  `;
+
+  document.getElementById("spotlightSearchBtn").addEventListener("click", ()=>{
+    document.querySelector('.tab[data-panel="search"]').click();
+    document.getElementById("searchInput").value = name;
+    document.getElementById("searchBtn").click();
+  });
+}
+renderSpotlight();
+
+document.getElementById("catalogDate").textContent = new Date(CATALOG_LAST_CHECKED).toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
+
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-"+tab.dataset.panel).classList.add("active");
+  });
+});
+
+async function fetchLiveEbayListings(query){
+  try{
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=15`);
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(!data.items || data.items.length === 0) return null;
+    return data.items;
+  }catch(e){
+    return null;
+  }
+}
+
+function renderSearchResults(displayName, listings, isLive){
+  const low = Math.min(...listings.map(l=>l.price));
+  const high = Math.max(...listings.map(l=>l.price));
+  const mid = Math.round(listings.reduce((a,l)=>a+l.price,0) / listings.length);
+
+  const plat = platformAdjust(mid);
+  const ebaySpeed = speedFor(mid, "ebay");
+  const fbSpeed = speedFor(mid, "facebook");
+  const vintedSpeed = speedFor(mid, "vinted");
+
+  const resultsEl = document.getElementById("searchResults");
+  const sourceTag = isLive
+    ? '<span style="font-size:11px;font-weight:500;color:var(--high);background:#E7F4EA;padding:2px 8px;border-radius:20px;margin-left:8px;">Live eBay data</span>'
+    : '<span style="font-size:11px;font-weight:500;color:var(--ink-faint);background:#F0F0EE;padding:2px 8px;border-radius:20px;margin-left:8px;">Sample data</span>';
+
+  resultsEl.innerHTML = `
+    <p class="results-title">${displayName} — eBay listings found ${sourceTag}</p>
+    <div class="range-grid">
+      <div class="range-box low"><div class="lbl">Low</div><div class="val">£${low}</div></div>
+      <div class="range-box mid"><div class="lbl">Mid</div><div class="val">£${mid}</div></div>
+      <div class="range-box high"><div class="lbl">High</div><div class="val">£${high}</div></div>
+    </div>
+    <div class="card">
+      ${listings.slice(0,10).map((l,i)=>`
+        <div class="listing-row" data-listing-idx="${i}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);cursor:${isLive && l.url ? 'pointer' : 'default'};">
+          ${isLive && l.image ? `<img src="${l.image}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#F0F0EE;">` : ''}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${isLive ? l.title : displayName}</div>
+            <div style="font-size:12.5px;color:var(--ink-faint);margin-top:1px;">${l.condition}${isLive && l.seller ? ' · ' + l.seller : ''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-weight:600;font-size:14px;">£${l.price}</div>
+            ${isLive && l.url ? '<div style="font-size:11px;color:var(--accent);margin-top:1px;">View on eBay →</div>' : ''}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <p class="results-title" style="margin-top:1.5rem;">What to list it for</p>
+    <div class="card">
+      <div class="platform-card">
+        <div>
+          <p class="platform-name">eBay</p>
+          <p class="platform-note">Matches wider market price. Fees apply, buyer covers shipping expectation.</p>
+          <span class="speed-pill ${speedClass[ebaySpeed]}">${speedLabel[ebaySpeed]}</span>
+        </div>
+        <div class="platform-price"><div class="amt">£${plat.ebay}</div></div>
+      </div>
+      <div class="platform-card">
+        <div>
+          <p class="platform-name">Facebook Marketplace</p>
+          <p class="platform-note">Local pickup expected, no fees. Price slightly under eBay to move it quicker.</p>
+          <span class="speed-pill ${speedClass[fbSpeed]}">${speedLabel[fbSpeed]}</span>
+        </div>
+        <div class="platform-price"><div class="amt">£${plat.facebook}</div></div>
+      </div>
+      <div class="platform-card">
+        <div>
+          <p class="platform-name">Vinted</p>
+          <p class="platform-note">Buyer pays fees on top, so list lower. Best for smaller accessories.</p>
+          <span class="speed-pill ${speedClass[vintedSpeed]}">${speedLabel[vintedSpeed]}</span>
+        </div>
+        <div class="platform-price"><div class="amt">£${plat.vinted}</div></div>
+      </div>
+    </div>
+  `;
+
+  if(isLive){
+    resultsEl.querySelectorAll(".listing-row").forEach(row=>{
+      row.addEventListener("click", ()=>{
+        const idx = parseInt(row.dataset.listingIdx);
+        const item = listings[idx];
+        if(item.url){
+          window.open(item.url, "_blank");
+        }
+      });
+    });
+  }
+}
+
+document.getElementById("searchBtn").addEventListener("click", async ()=>{
+  const input = document.getElementById("searchInput");
+  const errorEl = document.getElementById("searchError");
+  const query = input.value.trim();
+  if(!query){
+    errorEl.style.display = "block";
+    input.style.borderColor = "#B3261E";
+    return;
+  }
+  errorEl.style.display = "none";
+  input.style.borderColor = "";
+
+  const condition = document.getElementById("conditionSelect").value;
+  const resultsEl = document.getElementById("searchResults");
+  resultsEl.innerHTML = '<div class="card empty">Searching…</div>';
+
+  const liveItems = await fetchLiveEbayListings(query);
+
+  if(liveItems && liveItems.length > 0){
+    renderSearchResults(query, liveItems, true);
+    return;
+  }
+
+  const product = findClosestProduct(query);
+  if(!product){
+    resultsEl.innerHTML = '<div class="card empty">No results found — live eBay search is unavailable and no close match was found in the sample catalog.</div>';
+    return;
+  }
+
+  const listings = generateListings(product, condition);
+  renderSearchResults(product.name, listings, false);
+});
+
+document.getElementById("rangeBtn").addEventListener("click", ()=>{
+  const min = parseFloat(document.getElementById("minPrice").value);
+  const max = parseFloat(document.getElementById("maxPrice").value);
+  const errorEl = document.getElementById("rangeError");
+  const productQuery = document.getElementById("productRangeInput").value.trim().toLowerCase();
+
+  if(isNaN(min) || isNaN(max) || min < 0 || max <= min){
+    errorEl.style.display = "block";
+    return;
+  }
+  errorEl.style.display = "none";
+
+  let pool = CATALOG;
+  if(productQuery){
+    pool = CATALOG.filter(p => p.name.toLowerCase().includes(productQuery));
+    if(pool.length === 0) pool = CATALOG;
+  }
+
+  const matches = [];
+  pool.forEach(product=>{
+    const listings = generateListings(product, "any");
+    listings.forEach(l=>{
+      if(l.price >= min && l.price <= max){
+        matches.push({ name: product.name, price: l.price, condition: l.condition });
+      }
+    });
+  });
+
+  matches.sort((a,b)=>a.price-b.price);
+  const resultsEl = document.getElementById("rangeResults");
+
+  if(matches.length === 0){
+    resultsEl.innerHTML = `<div class="card empty">No Apple products found between £${min} and £${max}. Try a wider range.</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = `
+    <p class="results-title">${matches.length} listing${matches.length===1?"":"s"} between £${min}–£${max}</p>
+    <div class="rp-list">
+      ${matches.map(m=>`
+        <div class="rp-item">
+          <div>
+            <div class="rp-name">${m.name}</div>
+            <div class="rp-cond">${m.condition}</div>
+          </div>
+          <div class="rp-price">£${m.price}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+});
+
+document.getElementById("advisorBtn").addEventListener("click", ()=>{
+  const input = document.getElementById("advisorInput");
+  const errorEl = document.getElementById("advisorError");
+  const query = input.value.trim();
+  if(!query){
+    errorEl.style.display = "block";
+    input.style.borderColor = "#B3261E";
+    return;
+  }
+  errorEl.style.display = "none";
+  input.style.borderColor = "";
+
+  const condition = document.getElementById("advisorCondition").value;
+  const product = findClosestProduct(query);
+  const resultsEl = document.getElementById("advisorResults");
+
+  if(!product){
+    resultsEl.innerHTML = '<div class="card empty">No close match found in the sample catalog. Try a more common Apple product name.</div>';
+    return;
+  }
+
+  renderAdvisor(product, condition);
+});
+</script>
+
+</body>
+</html>
